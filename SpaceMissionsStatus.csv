@@ -1,0 +1,5 @@
+MissionStatus_Id,MissionStatus
+1,Partial Failure
+2,Success
+3,Prelaunch Failure
+4,Failure
