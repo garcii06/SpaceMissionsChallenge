@@ -2,9 +2,16 @@
 -- 0. The general goal is to create dim-fact table format, helpful for the star schema.
 -- Give insights of the following
 	-- 1. Access to the general panorama.
-	-- 1.1 
 	-- 2. Know the countries success rate. Can be by a timeframe or company (By a window function implementation).
+	-- 2.1 Know the total missions by each year, and the order of launches according to the country
+	-- 2.2 Get the same results where the order of launches is not important, only the count of missions by year.
+	-- 2.3 Get the total and year where most of the launches occured. (By a Common Table Expression CTE).
+	-- 2.4
+	-- 2.5 Fail and Success Rate Global
+	-- 2.6 Fail and Success Total of Missions by Country
+	-- 2.7 Fail and Success Rate by Country (TODO)
 	-- 3. Know how much does each country/company spent.
+	-- 3.1Know how much does each country/company spent through the years.
 
 -- 0. Preparation of tables.
 -- As I want to create a Star Schema for Visualization, I need to create tables at least for Country, but I can go further with the Company, Rocket, Mission, RocketStatus and Mission Status.
@@ -87,9 +94,9 @@ INNER JOIN SpaceMissions..Countries cts
 
 -- 2. Know the countries success rate. Can be by a timeframe or company (By a window function implementation).
 	-- 2.1 Know the total missions by each year, and the order of launches according to the country
-SELECT COUNT(mst.MissionStatus) OVER (PARTITION BY YEAR(Date) ORDER BY Date) Total_Missions_By_Year
-	,YEAR(DATE) Year_of_Mission
+SELECT YEAR(DATE) Year_of_Mission
 	,cts.Country_name country
+	,COUNT(mst.MissionStatus) OVER (PARTITION BY YEAR(Date) ORDER BY Date) Total_Missions_By_Year
 FROM SpaceMissions..space_missions spm 
 INNER JOIN SpaceMissions..MissionStatusTable mst
 	ON spm.MissionStatus = mst.MissionStatus_Id
@@ -125,4 +132,61 @@ SELECT Max_Num_Missions, Year_of_Mission
 FROM Max_Missions mm INNER JOIN Total_Launches_By_Year tl
 	ON mm.Max_Num_Missions = tl.Total_Missions_By_Year;
 
--- 	-- 3. Know how much does each country/company spent.
+	-- 2.4
+
+
+	-- 2.5 Fail and Success Rate Global
+WITH StatusGroups AS(
+	SELECT 
+	CASE
+		WHEN MissionStatus = 2 THEN 'Success'
+		ELSE 'Fail'
+	END AS Status
+	FROM SpaceMissions..space_missions
+)
+SELECT Status, COUNT(*) AS TotalMissions, 100.0 * COUNT(*)/(SELECT COUNT(*) FROM StatusGroups) AS PercentageStatusRate
+FROM StatusGroups
+GROUP BY Status;
+
+	-- 2.6 Fail and Success Total of Missions by Country
+WITH StatusGroups AS(
+	SELECT Country_id
+	,CASE
+		WHEN MissionStatus = 2 THEN 'Success'
+		ELSE 'Fail'
+	END AS Status
+	FROM SpaceMissions..space_missions
+)
+SELECT Country_name, Status, COUNT(*) AS TotalMissions
+FROM StatusGroups stg INNER JOIN SpaceMissions..Countries cou
+ON stg.Country_id = cou.Country_id
+GROUP BY Country_name, Status
+ORDER BY Country_name;
+
+	-- 2.7 Fail and Success Rate by Country (TODO)
+
+ 	-- 3. Know how much does each country/company spent.
+SELECT cou.Country_name, ROUND(SUM(spm.Price),2) as Total_Cost_US_Millions
+FROM SpaceMissions..space_missions spm INNER JOIN SpaceMissions..Countries cou
+ON spm.Country_id = cou.Country_id
+GROUP BY cou.Country_name
+ORDER BY 2 DESC;
+
+SELECT Company, ROUND(SUM(Price),2) as Total_Cost_US_Millions
+FROM SpaceMissions..space_missions
+GROUP BY Company
+ORDER BY 2 DESC;
+
+ 	-- 3.1 Know how much does each country/company spent, through the years.
+SELECT cou.Country_name, spm.Date, SUM(spm.Price) OVER(PARTITION BY cou.Country_name ORDER BY cou.Country_Name, spm.Date) as Total_Cost_US_Millions
+FROM SpaceMissions..space_missions spm INNER JOIN SpaceMissions..Countries cou
+ON spm.Country_id = cou.Country_id
+GROUP BY cou.Country_name, spm.Date, spm.Price
+HAVING SUM(spm.Price) > 0
+ORDER BY cou.Country_name, spm.Date ASC;
+
+SELECT Company, Date, SUM(Price) OVER(PARTITION BY Company ORDER BY Company, Date) as Total_Cost_US_Millions
+FROM SpaceMissions..space_missions
+GROUP BY Company, Date, Price
+HAVING SUM(Price) > 0
+ORDER BY Company, Date ASC;
