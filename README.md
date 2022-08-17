@@ -6,8 +6,9 @@ The following repo contains:
 space_missions.csv
 space_missions_data_dictionary.csv
 ````
-2. SQL query for the creation of tables for a star schema. `SQLQuerySpace.sql`
+2. SQL query for the creation of tables for a star schema.
 ```
+SQLQuerySpace.sql
 SpaceMissions.csv
 SpaceMissionsStatus.csv
 SpaceMissionsRocketStatus.csv
