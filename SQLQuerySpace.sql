@@ -2,11 +2,11 @@
 -- 0. The general goal is to create dim-fact table format, helpful for the star schema.
 -- Give insights of the following
 	-- 1. Access to the general panorama.
-	-- 2. Know the countries success rate. Can be by a timeframe or company (By a window function implementation).
-	-- 2.1 Know the total missions by each year, and the order of launches according to the country
+	-- 2. Know the total missions launched by country.
+	-- 2.1 Know the total missions launched by year and how launched it.
 	-- 2.2 Get the same results where the order of launches is not important, only the count of missions by year.
 	-- 2.3 Get the total and year where most of the launches occured. (By a Common Table Expression CTE).
-	-- 2.4
+	-- 2.4 Not Defined
 	-- 2.5 Fail and Success Rate Global
 	-- 2.6 Fail and Success Total of Missions by Country
 	-- 2.7 Fail and Success Rate by Country (TODO)
@@ -81,7 +81,7 @@ FROM SpaceMissions..space_missions
 GROUP BY Company
 ORDER BY COUNT(*) DESC;
 
--- 2. Know the countries success rate. Can be by a timeframe or company (By a window function implementation).
+-- 2. Know the total missions launched by country.
 SELECT COUNT(mst.MissionStatus) OVER (PARTITION BY cts.Country_Name ORDER BY Date) Total_Missions
 	,cts.Country_name country
 	,Date
@@ -92,8 +92,7 @@ INNER JOIN SpaceMissions..MissionStatusTable mst
 INNER JOIN SpaceMissions..Countries cts
 	ON spm.Country_id = cts.Country_id;
 
--- 2. Know the countries success rate. Can be by a timeframe or company (By a window function implementation).
-	-- 2.1 Know the total missions by each year, and the order of launches according to the country
+	-- 2.1 Know the total missions launched by year and how launched it.
 SELECT YEAR(DATE) Year_of_Mission
 	,cts.Country_name country
 	,COUNT(mst.MissionStatus) OVER (PARTITION BY YEAR(Date) ORDER BY Date) Total_Missions_By_Year
