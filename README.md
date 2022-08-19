@@ -5,7 +5,7 @@ The purpose was to create a single page dashboard telling the story of space mis
 For this Challenge I used `SQL` and `Power BI` for the analysis, cleaning and visualization of the data.
 
 ## Table of Contents
-- [Original Dataset](Original Dataset)
+- [Original Dataset](#Original-Dataset)
 - [Data cleaning and transformation](#how-to-create-your-profile)
 - [SQL Analysis](#SQL-Analysis)
 - [Dashboard](#Dashboard)
